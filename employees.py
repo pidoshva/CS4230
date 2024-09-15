@@ -14,6 +14,9 @@ class Worker(Employee):
     def show_details(self):
         pass  # Display logic to be implemented later
 
+    def quit(self):
+        pass  # logic to be implemented later
+
 # Composite: Supervisor class (can have subordinates)
 class Supervisor(Employee):
     def __init__(self, name):
@@ -21,11 +24,17 @@ class Supervisor(Employee):
         self.subordinates = []  # List to store subordinate workers
         self.maxSubordinates = 5
 
-    def add(self):
-        pass  # Logic to add subordinates to be implemented later
+    def hire_employee(self):
+        pass  # Logic for hiring to be implemented later
 
-    def remove(self):
-        pass  # Logic to remove subordinates to be implemented later
+    def layoff_employee(self):
+        pass  # Logic for laying off to be implemented later
+
+    def fire_employee(self):
+        pass  # Logic for firing to be implemented later
+
+    def quit(self):
+        pass  # logic to be implemented later
 
     def show_details(self):
         pass  # Display logic to be implemented later
@@ -37,11 +46,20 @@ class VicePresident(Employee):
         self.subordinates = []  # List to store subordinate supervisors
         self.maxSubordinates = 3
 
-    def add(self):
-        pass  # Logic to add subordinates to be implemented later
+    def promote_employee(self):
+        pass  # Logic for promoting to be implemented later
 
-    def remove(self):
-        pass  # Logic to remove subordinates to be implemented later
+    def layoff_employee(self):
+        pass  # Logic for laying off to be implemented later
+
+    def fire_employee(self):
+        pass  # Logic for firing to be implemented later
+    
+    def transfer_employee(self):
+        pass  # Logic for transferring to be implemented later
+
+    def quit(self):
+        pass  # logic to be implemented later
 
     def show_details(self):
         pass  # Display logic to be implemented later
@@ -53,11 +71,14 @@ class President(Employee):
         self.subordinates = []  # List to store subordinate vice presidents
         self.maxSubordinates = 2  # List to store subordinate workers
 
-    def add(self):
-        pass  # Logic to add subordinates to be implemented later
+    def promote_employee(self):
+        pass  # Logic for promoting to be implemented later
+    
+    def layoff_employee(self):
+        pass  # Logic for laying off to be implemented later
 
-    def remove(self):
-        pass  # Logic to remove subordinates to be implemented later
+    def fire_employee(self):
+        pass  # Logic for firing to be implemented later
 
     def show_details(self):
         pass  # Display logic to be implemented later
