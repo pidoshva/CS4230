@@ -1,0 +1,9 @@
+President: Bob
+Vice President: Carol
+Supervisor: Ted
+Worker: Wolfgang
+Supervisor: Pellas
+Worker: Melissande
+Vice President: David
+Supervisor: Smith
+Worker: Clara
