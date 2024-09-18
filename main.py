@@ -53,10 +53,40 @@ def save_organization(president, filename='organization.txt'):
                 for worker in supervisor.workers:
                     f.write(f"Worker: {worker.name}\n")
 
+def handle_quit(president):
+    """Handles quitting"""
+    role = input("Enter role to quit (worker, supervisor, vp): ").strip().lower()
+    name = input("Enter name of person quitting: ").strip()
+    if role == "worker":
+        for vp in president.vice_presidents:
+            for supervisor in vp.supervisors:
+                for worker in supervisor.workers:
+                    if worker.name == name:
+                        supervisor.fire(worker)
+                        print(f"{name} has quit.")
+                        save_organization(president)
+                        return
+    elif role == "supervisor":
+        for vp in president.vice_presidents:
+            for supervisor in vp.supervisors:
+                if supervisor.name == name:
+                    vp.fire(supervisor)
+                    print(f"{name} has quit.")
+                    save_organization(president)
+                    return
+    elif role == "vp":
+        for vp in president.vice_presidents:
+            if vp.name == name:
+                president.fire(vp)
+                print(f"{name} has quit.")
+                save_organization(president)
+                return
+    print(f"{name} not found.")
+
 def command_loop(president):
     """Command loop to interact with the system"""
     while True:
-        command = input("Enter command (hire, fire, promote, display, quit): ").strip().lower()
+        command = input("Enter command (hire, fire, promote, display, q): ").strip().lower()
         if command == "display":
             display_organization(president)
         elif command == "hire":
@@ -148,7 +178,7 @@ def command_loop(president):
                             print(f"Promoted {name} to Vice President")
                             save_organization(president)  # Save after promotion
                             display_organization(president)  # Display updated organization
-        elif command == "quit":
+        elif command == "q":
             break
         else:
             print("Invalid command.")
