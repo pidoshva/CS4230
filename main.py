@@ -83,6 +83,54 @@ def handle_quit(president):
                 return
     print(f"{name} not found.")
 
+def handle_layoff(president):
+    """Handles layoffs"""
+    role = input("Enter role to lay off (worker, supervisor, vp): ").strip().lower()
+    name = input("Enter name to lay off: ").strip()
+    if role == "worker":
+        for vp in president.vice_presidents:
+            for supervisor in vp.supervisors:
+                for worker in supervisor.workers:
+                    if worker.name == name:
+                        supervisor.fire(worker)
+                        print(f"{name} has been laid off.")
+                        relocate_worker(president, worker)
+                        save_organization(president)
+                        return
+    print(f"{name} not found.")
+
+def relocate_worker(president, worker):
+    """Relocates workers"""
+    for vp in president.vice_presidents:
+        for supervisor in vp.supervisors:
+            if len(supervisor.workers) < 5:
+                supervisor.hire(worker)
+                print(f"{worker.name} relocated to {supervisor.name}.")
+                return
+    print(f"No vacancies for {worker.name}. Layoff is final.")
+
+def transfer_employee(president):
+    """Moves employees"""
+    role = input("Enter role to transfer (worker, supervisor): ").strip().lower()
+    name = input("Enter name to transfer: ").strip()
+    if role == "worker":
+        source_supervisor = input("Enter current supervisor's name: ").strip()
+        destination_supervisor = input("Enter new supervisor's name: ").strip()
+        for vp in president.vice_presidents:
+            for supervisor in vp.supervisors:
+                if supervisor.name == source_supervisor:
+                    for worker in supervisor.workers:
+                        if worker.name == name:
+                            supervisor.fire(worker)
+                            for vp_dest in president.vice_presidents:
+                                for sup_dest in vp_dest.supervisors:
+                                    if sup_dest.name == destination_supervisor:
+                                        sup_dest.hire(worker)
+                                        print(f"Transferred {name} from {source_supervisor} to {destination_supervisor}.")
+                                        save_organization(president)
+                                        return
+    print(f"Transfer failed. {name} not found or destination unavailable.")
+
 def command_loop(president):
     """Command loop to interact with the system"""
     while True:
