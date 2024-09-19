@@ -11,11 +11,17 @@ class Employee(ABC):
 
 # Leaf: Worker class
 class Worker(Employee):
+    def __init__(self):
+        self.overseer = None
+
+    def setOverseer(self, overseer):
+        self.overseer = overseer
+
     def show_details(self):
         pass  # Display logic to be implemented later
 
     def quit(self):
-        pass  # logic to be implemented later
+        self.overseer.fire_employee(self)
 
 # Composite: Supervisor class (can have subordinates)
 class Supervisor(Employee):
@@ -23,18 +29,28 @@ class Supervisor(Employee):
         super().__init__(name)
         self.subordinates = []  # List to store subordinate workers
         self.maxSubordinates = 5
+        self.overseer = None
 
-    def hire_employee(self):
-        pass  # Logic for hiring to be implemented later
+    def setOverseer(self, overseer):
+        self.overseer = overseer
+
+    def hire_employee(self, worker):
+        if worker.name == "":
+            self.subordinates.append(worker)
+        elif len(self.subordinates) < self.maxSubordinates:
+            self.subordinates.append(worker)
+            worker.setOverseer(self)
+        else:
+            print(str.format("Unable to hire new workers. Max workers for Supervisor {} already reached",self.name))
 
     def layoff_employee(self):
         pass  # Logic for laying off to be implemented later
 
-    def fire_employee(self):
-        pass  # Logic for firing to be implemented later
+    def fire_employee(self, worker):
+        self.subordinates.remove(worker)
 
     def quit(self):
-        pass  # logic to be implemented later
+        self.overseer.fire_employee(self)
 
     def show_details(self):
         pass  # Display logic to be implemented later
@@ -45,21 +61,34 @@ class VicePresident(Employee):
         super().__init__(name)
         self.subordinates = []  # List to store subordinate supervisors
         self.maxSubordinates = 3
+        self.overseer = None
+
+    def setOverseer(self, overseer):
+        self.overseer = overseer
 
     def promote_employee(self):
         pass  # Logic for promoting to be implemented later
 
+    def hire_employee(self, supervisor):
+        if supervisor.name == "":
+            self.subordinates.append(supervisor)
+        elif len(self.subordinates) < self.maxSubordinates:
+            self.subordinates.append(supervisor)
+            supervisor.setOverseer(self)
+        else:
+            print(str.format("Unable to hire new supervisors. Max workers for Vice President {} already reached", self.name))
+
     def layoff_employee(self):
         pass  # Logic for laying off to be implemented later
 
-    def fire_employee(self):
-        pass  # Logic for firing to be implemented later
+    def fire_employee(self, supervisor):
+        self.subordinates.remove(supervisor)
     
     def transfer_employee(self):
         pass  # Logic for transferring to be implemented later
 
     def quit(self):
-        pass  # logic to be implemented later
+        self.overseer.fire_employee(self)
 
     def show_details(self):
         pass  # Display logic to be implemented later
@@ -70,15 +99,28 @@ class President(Employee):
         super().__init__(name)
         self.subordinates = []  # List to store subordinate vice presidents
         self.maxSubordinates = 2  # List to store subordinate workers
+        self.overseer = None
+
+    def setOverseer(self, overseer):
+        self.overseer = overseer
 
     def promote_employee(self):
         pass  # Logic for promoting to be implemented later
+
+    def hire_employee(self, vicePresident):
+        if vicePresident.name == "":
+            self.subordinates.append(vicePresident)
+        elif len(self.subordinates) < self.maxSubordinates:
+            self.subordinates.append(vicePresident)
+            vicePresident.setOverseer(self)
+        else:
+            print(str.format("Unable to hire new Vice Presidents. Max workers for President {} already reached",self.name))
     
     def layoff_employee(self):
         pass  # Logic for laying off to be implemented later
 
-    def fire_employee(self):
-        pass  # Logic for firing to be implemented later
+    def fire_employee(self, vicePresident):
+        self.subordinates.remove(vicePresident)
 
     def show_details(self):
         pass  # Display logic to be implemented later
