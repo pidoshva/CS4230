@@ -3,7 +3,7 @@ Project #4
 The Dysfunctional Organization System
 [Vadim Pidoshva, Trajan Clark, Jessica Adams, Cameron Seppi]
 """
-import employees
+from employees import President, VicePresident, Supervisor, Worker
 
 def display_organization(president):
     """Utility function to display the organization hierarchy"""

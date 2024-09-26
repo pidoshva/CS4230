@@ -18,6 +18,7 @@ class Worker(Employee):
         self.overseer = overseer
 
     def show_details(self):
+        print(f"Worker: {self.name}")
         pass  # Display logic to be implemented later
 
     def quit(self):
@@ -43,7 +44,7 @@ class Supervisor(Employee):
         else:
             print(str.format("Unable to hire new workers. Max workers for Supervisor {} already reached",self.name))
 
-    def layoff_employee(self):
+    def layoff_employee(self, name):
         pass  # Logic for laying off to be implemented later
 
     def fire_employee(self, worker):
@@ -53,6 +54,9 @@ class Supervisor(Employee):
         self.overseer.fire_employee(self)
 
     def show_details(self):
+        print(f"Supervisor: {self.name}")
+        for subordinate in self.subordinates:
+            subordinate.show_details()
         pass  # Display logic to be implemented later
 
 # Composite: VicePresident class (can have supervisors)
@@ -66,7 +70,7 @@ class VicePresident(Employee):
     def setOverseer(self, overseer):
         self.overseer = overseer
 
-    def promote_employee(self):
+    def promote_employee(self, name):
         pass  # Logic for promoting to be implemented later
 
     def hire_employee(self, supervisor):
@@ -84,13 +88,16 @@ class VicePresident(Employee):
     def fire_employee(self, supervisor):
         self.subordinates.remove(supervisor)
     
-    def transfer_employee(self):
+    def transfer_employee(self, name):
         pass  # Logic for transferring to be implemented later
 
     def quit(self):
         self.overseer.fire_employee(self)
 
     def show_details(self):
+        print(f"Vice President: {self.name}")
+        for subordinate in self.subordinates:
+            subordinate.show_details()
         pass  # Display logic to be implemented later
 
 # Composite: President class (can have vice presidents)
@@ -104,7 +111,7 @@ class President(Employee):
     def setOverseer(self, overseer):
         self.overseer = overseer
 
-    def promote_employee(self):
+    def promote_employee(self, name):
         pass  # Logic for promoting to be implemented later
 
     def hire_employee(self, vicePresident):
@@ -116,11 +123,14 @@ class President(Employee):
         else:
             print(str.format("Unable to hire new Vice Presidents. Max workers for President {} already reached",self.name))
     
-    def layoff_employee(self):
+    def layoff_employee(self, name):
         pass  # Logic for laying off to be implemented later
 
     def fire_employee(self, vicePresident):
         self.subordinates.remove(vicePresident)
 
     def show_details(self):
+        print(f"President: {self.name}")
+        for subordinate in self.subordinates:
+            subordinate.show_details()
         pass  # Display logic to be implemented later
