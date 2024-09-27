@@ -179,13 +179,14 @@ def handle_firing(president):
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
                 if supervisor.name == name:
-                    vp.fire(supervisor)
+                    supervisor.handle_firing(vp)
                     print(f"Fired supervisor {name}")
                     save_organization(president)
                     return
     elif role == "vp":
         for vp in president.vice_presidents:
             if vp.name == name:
+                vp.handle_firing(president)
                 president.fire(vp)
                 print(f"Fired VP {name}")
                 save_organization(president)
