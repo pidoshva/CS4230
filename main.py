@@ -219,11 +219,15 @@ def handle_firing(president, role=None, name=None):
                 promoted_vp.supervisors += vp_to_fire.supervisors
                 president.vice_presidents[president.vice_presidents.index(vp_to_fire)] = promoted_vp
                 print(f"Promoted Supervisor {promoted_supervisor.name} to Vice President.")
-            president.vice_presidents.remove(vp_to_fire)
+            else:
+                # If there are no supervisors under the VP, simply remove the VP
+                president.vice_presidents.remove(vp_to_fire)
+                print(f"Fired Vice President {name}")
             save_organization(president)
             return
         else:
             print(f"Vice President {name} not found.")
+
 
 def handle_promotion(president):
     """Handles promotions"""
