@@ -24,17 +24,17 @@ def read_organization(filename='organization.txt'):
         name = parts[1]
 
         if role == "President":
-            president = President(name)
+            president = employees.President(name)
         elif role == "Vice President":
-            vp = VicePresident(name)
+            vp = employees.VicePresident(name)
             president.hire(vp)
             current_vp = vp
         elif role == "Supervisor":
-            supervisor = Supervisor(name)
+            supervisor = employees.Supervisor(name)
             current_vp.hire(supervisor)
             current_supervisor = supervisor
         elif role == "Worker":
-            worker = Worker(name)
+            worker = employees.Worker(name)
             current_supervisor.hire(worker)
 
     return president
@@ -42,9 +42,7 @@ def read_organization(filename='organization.txt'):
 def save_organization(president, filename='organization.txt'):
     """Utility function to save the organization to a file"""
     with open(filename, 'w') as f:
-        # Write the president
         f.write(f"President: {president.name}\n")
-        # Write each vice president, supervisor, and worker in the organization
         for vp in president.vice_presidents:
             f.write(f"Vice President: {vp.name}\n")
             for supervisor in vp.supervisors:
@@ -139,7 +137,7 @@ def handle_hiring(president):
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
                 if supervisor.name == supervisor_name:
-                    worker = Worker(name)
+                    worker = employees.Worker(name)
                     supervisor.hire(worker)
                     print(f"Hired worker {name} under Supervisor {supervisor_name}")
                     save_organization(president)
@@ -148,14 +146,14 @@ def handle_hiring(president):
         vp_name = input("Enter VP's name: ").strip()
         for vp in president.vice_presidents:
             if vp.name == vp_name:
-                supervisor = Supervisor(name)
+                supervisor = employees.Supervisor(name)
                 vp.hire(supervisor)
                 print(f"Hired Supervisor {name} under Vice President {vp_name}")
                 save_organization(president)
                 return
     elif role == "vp":
         if len(president.vice_presidents) < 2:
-            vp = VicePresident(name)
+            vp = employees.VicePresident(name)
             president.hire(vp)
             print(f"Hired Vice President {name} under President {president.name}")
             save_organization(president)
@@ -163,9 +161,10 @@ def handle_hiring(president):
             print("No space to hire another VP.")
 
 def handle_firing(president):
-    """Handles firing"""
+    """Handles firing and promoting the next in line"""
     role = input("Enter role to fire (worker, supervisor, vp): ").strip().lower()
     name = input("Enter name to fire: ").strip()
+    
     if role == "worker":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
@@ -175,22 +174,46 @@ def handle_firing(president):
                         print(f"Fired worker {name}")
                         save_organization(president)
                         return
+
     elif role == "supervisor":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
                 if supervisor.name == name:
-                    supervisor.handle_firing(vp)
-                    print(f"Fired supervisor {name}")
+                    # Find a worker to promote if needed
+                    if supervisor.workers:
+                        promoted_worker = supervisor.workers.pop(0)  # Promote the first worker found
+                        promoted_worker_to_supervisor = employees.Supervisor(promoted_worker.name)
+                        
+                        # Transfer remaining workers to the newly promoted supervisor
+                        promoted_worker_to_supervisor.workers = supervisor.workers
+                        
+                        # Replace the fired supervisor with the promoted worker
+                        vp.supervisors[vp.supervisors.index(supervisor)] = promoted_worker_to_supervisor
+                        print(f"Promoted Worker {promoted_worker.name} to Supervisor and replaced {supervisor.name}.")
+                    else:
+                        # If no worker to promote, just remove the supervisor
+                        vp.fire(supervisor)
+                        print(f"Fired supervisor {name}")
                     save_organization(president)
                     return
+
     elif role == "vp":
         for vp in president.vice_presidents:
             if vp.name == name:
-                vp.handle_firing(president)
+                # Fire VP and promote one supervisor under them
                 president.fire(vp)
-                print(f"Fired VP {name}")
+                if vp.supervisors:
+                    promoted_supervisor = vp.supervisors.pop(0)
+                    new_vp = employees.VicePresident(promoted_supervisor.name)
+                    
+                    # Transfer the remaining supervisors to the newly promoted VP
+                    new_vp.supervisors = vp.supervisors
+                    
+                    president.hire(new_vp)
+                    print(f"Promoted Supervisor {promoted_supervisor.name} to Vice President.")
                 save_organization(president)
                 return
+    print(f"{name} not found.")
 
 def handle_promotion(president):
     """Handles promotions"""
@@ -213,7 +236,7 @@ def handle_promotion(president):
         vp_name = input("Enter current VP's name: ").strip()
         for vp in president.vice_presidents:
             if vp.name == vp_name:
-                promoted_vp = vp.promote(Supervisor(name))
+                promoted_vp = vp.promote(employees.Supervisor(name))
                 if promoted_vp:
                     president.hire(promoted_vp)
                     print(f"Promoted {name} to Vice President")
@@ -222,7 +245,7 @@ def handle_promotion(president):
 def command_loop(president):
     """Input collection system"""
     while True:
-        command = input("Enter command (hire, fire, promote, quit, layoff, transfer, display, q): ").strip().lower()
+        command = input("Enter command (hire, fire, promote, quit, display, q): ").strip().lower()
         if command == "display":
             display_organization(president)
         elif command == "hire":
@@ -242,7 +265,7 @@ def command_loop(president):
         else:
             print("Invalid command.")
 
+# Main program
 if __name__ == "__main__":
-    """Main"""
     president = read_organization()
     command_loop(president)
