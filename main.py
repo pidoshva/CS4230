@@ -160,11 +160,12 @@ def handle_hiring(president):
         else:
             print("No space to hire another VP.")
 
-def handle_firing(president):
-    """Handles firing and promoting the next in line"""
-    role = input("Enter role to fire (worker, supervisor, vp): ").strip().lower()
-    name = input("Enter name to fire: ").strip()
-    
+def handle_firing(president, role=None, name=None):
+    if not role:
+        role = input("Enter role to fire (worker, supervisor, vp): ").strip().lower()
+    if not name:
+        name = input("Enter name to fire: ").strip()
+
     if role == "worker":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
@@ -174,46 +175,55 @@ def handle_firing(president):
                         print(f"Fired worker {name}")
                         save_organization(president)
                         return
-
     elif role == "supervisor":
         for vp in president.vice_presidents:
+            supervisor_to_fire = None
             for supervisor in vp.supervisors:
                 if supervisor.name == name:
-                    # Find a worker to promote if needed
-                    if supervisor.workers:
-                        promoted_worker = supervisor.workers.pop(0)  # Promote the first worker found
-                        promoted_worker_to_supervisor = employees.Supervisor(promoted_worker.name)
-                        
-                        # Transfer remaining workers to the newly promoted supervisor
-                        promoted_worker_to_supervisor.workers = supervisor.workers
-                        
-                        # Replace the fired supervisor with the promoted worker
-                        vp.supervisors[vp.supervisors.index(supervisor)] = promoted_worker_to_supervisor
-                        print(f"Promoted Worker {promoted_worker.name} to Supervisor and replaced {supervisor.name}.")
-                    else:
-                        # If no worker to promote, just remove the supervisor
-                        vp.fire(supervisor)
-                        print(f"Fired supervisor {name}")
-                    save_organization(president)
-                    return
+                    supervisor_to_fire = supervisor
+                    break
 
-    elif role == "vp":
-        for vp in president.vice_presidents:
-            if vp.name == name:
-                # Fire VP and promote one supervisor under them
-                president.fire(vp)
-                if vp.supervisors:
-                    promoted_supervisor = vp.supervisors.pop(0)
-                    new_vp = employees.VicePresident(promoted_supervisor.name)
-                    
-                    # Transfer the remaining supervisors to the newly promoted VP
-                    new_vp.supervisors = vp.supervisors
-                    
-                    president.hire(new_vp)
-                    print(f"Promoted Supervisor {promoted_supervisor.name} to Vice President.")
+            if supervisor_to_fire:
+                if supervisor_to_fire.workers:
+                    # Promote the first worker to Supervisor
+                    promoted_worker = supervisor_to_fire.workers.pop(0)
+                    promoted_supervisor = employees.Supervisor(promoted_worker.name)
+                    promoted_supervisor.workers = supervisor_to_fire.workers
+                    vp.supervisors[vp.supervisors.index(supervisor_to_fire)] = promoted_supervisor
+                    print(f"Promoted Worker {promoted_worker.name} to Supervisor and replaced {supervisor_to_fire.name}")
+                else:
+                    vp.supervisors.remove(supervisor_to_fire)
+                    print(f"Fired Supervisor {name}")
                 save_organization(president)
                 return
-    print(f"{name} not found.")
+            else:
+                print(f"Supervisor {name} not found under Vice President {vp.name}.")
+    elif role == "vp":
+        vp_to_fire = None
+        for vp in president.vice_presidents:
+            if vp.name == name:
+                vp_to_fire = vp
+                break
+
+        if vp_to_fire:
+            if vp_to_fire.supervisors:
+                # Promote the first supervisor to VP
+                promoted_supervisor = vp_to_fire.supervisors.pop(0)
+                promoted_vp = employees.VicePresident(promoted_supervisor.name)
+                if promoted_supervisor.workers:
+                    # Promote the first worker to Supervisor
+                    promoted_worker = promoted_supervisor.workers.pop(0)
+                    new_supervisor = employees.Supervisor(promoted_worker.name)
+                    new_supervisor.workers = promoted_supervisor.workers
+                    promoted_vp.supervisors.append(new_supervisor)
+                promoted_vp.supervisors += vp_to_fire.supervisors
+                president.vice_presidents[president.vice_presidents.index(vp_to_fire)] = promoted_vp
+                print(f"Promoted Supervisor {promoted_supervisor.name} to Vice President.")
+            president.vice_presidents.remove(vp_to_fire)
+            save_organization(president)
+            return
+        else:
+            print(f"Vice President {name} not found.")
 
 def handle_promotion(president):
     """Handles promotions"""
