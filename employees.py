@@ -11,7 +11,8 @@ class Employee(ABC):
 
 # Leaf: Worker class
 class Worker(Employee):
-    def __init__(self):
+    def __init__(self, name):
+        super().__init__(name)
         self.overseer = None
 
     def setOverseer(self, overseer):
