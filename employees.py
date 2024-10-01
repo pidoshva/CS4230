@@ -1,126 +1,146 @@
 from abc import ABC, abstractmethod
 
-# Component: The base class for all employees
-class Employee(ABC):
+class Employee(ABC): #abstract
     def __init__(self, name):
         self.name = name
-    
+
     @abstractmethod
-    def show_details(self):
+    def hire(self, employee):
         pass
 
-# Leaf: Worker class
+    @abstractmethod
+    def fire(self, employee):
+        pass
+
+    @abstractmethod
+    def display(self, indent=0):
+        pass
+
+    @abstractmethod
+    def promote(self, employee):
+        pass
+
 class Worker(Employee):
-    def __init__(self):
-        self.overseer = None
+    def hire(self, employee):
+        raise Exception("Cannot hire under a worker")
 
-    def setOverseer(self, overseer):
-        self.overseer = overseer
+    def fire(self, employee):
+        raise Exception("Cannot fire under a worker")
 
-    def show_details(self):
-        pass  # Display logic to be implemented later
+    def display(self, indent=0):
+        print(" " * indent + f"Worker: {self.name}")
 
-    def quit(self):
-        self.overseer.fire_employee(self)
+    def promote(self, employee):
+        raise Exception("Cannot promote a worker")
 
-# Composite: Supervisor class (can have subordinates)
 class Supervisor(Employee):
     def __init__(self, name):
         super().__init__(name)
-        self.subordinates = []  # List to store subordinate workers
-        self.maxSubordinates = 5
-        self.overseer = None
+        self.workers = []  # A supervisor can manage up to 5 workers
 
-    def setOverseer(self, overseer):
-        self.overseer = overseer
-
-    def hire_employee(self, worker):
-        if worker.name == "":
-            self.subordinates.append(worker)
-        elif len(self.subordinates) < self.maxSubordinates:
-            self.subordinates.append(worker)
-            worker.setOverseer(self)
+    def hire(self, worker):
+        for w in self.workers:
+            if w.name == worker.name:
+                print(f"Worker {worker.name} already exists under Supervisor {self.name}")
+                return
+        if len(self.workers) < 5:
+            self.workers.append(worker)
         else:
-            print(str.format("Unable to hire new workers. Max workers for Supervisor {} already reached",self.name))
+            print(f"No space to hire under Supervisor {self.name}")
 
-    def layoff_employee(self):
-        pass  # Logic for laying off to be implemented later
+    def fire(self, worker):
+        if worker in self.workers:
+            self.workers.remove(worker)
+        else:
+            print(f"{worker.name} is not under Supervisor {self.name}")
 
-    def fire_employee(self, worker):
-        self.subordinates.remove(worker)
+    def display(self, indent=0):
+        print(" " * indent + f"Supervisor: {self.name}")
+        for worker in self.workers:
+            worker.display(indent + 2)
 
-    def quit(self):
-        self.overseer.fire_employee(self)
+    def promote(self, worker):
+        if worker in self.workers:
+            self.workers.remove(worker)
+            promoted_supervisor = Supervisor(worker.name)
+            print(f"Promoted {worker.name} to Supervisor.")
+            return promoted_supervisor
+        else:
+            print(f"Cannot promote {worker.name}, they are not under Supervisor {self.name}.")
+            return None
 
-    def show_details(self):
-        pass  # Display logic to be implemented later
+    def handle_firing(self, vp):
+        """Handle Supervisor firing - promote a worker"""
+        if len(self.workers) > 0:
+            new_supervisor = self.workers.pop(0)
+            vp.hire(Supervisor(new_supervisor.name))
+            print(f"Promoted Worker {new_supervisor.name} to Supervisor.")
+        else:
+            print(f"No Workers left to promote under Supervisor {self.name}")
 
-# Composite: VicePresident class (can have supervisors)
 class VicePresident(Employee):
     def __init__(self, name):
         super().__init__(name)
-        self.subordinates = []  # List to store subordinate supervisors
-        self.maxSubordinates = 3
-        self.overseer = None
+        self.supervisors = []  # A VP can manage up to 3 supervisors
 
-    def setOverseer(self, overseer):
-        self.overseer = overseer
-
-    def promote_employee(self):
-        pass  # Logic for promoting to be implemented later
-
-    def hire_employee(self, supervisor):
-        if supervisor.name == "":
-            self.subordinates.append(supervisor)
-        elif len(self.subordinates) < self.maxSubordinates:
-            self.subordinates.append(supervisor)
-            supervisor.setOverseer(self)
+    def hire(self, supervisor):
+        if len(self.supervisors) < 3:
+            self.supervisors.append(supervisor)
         else:
-            print(str.format("Unable to hire new supervisors. Max workers for Vice President {} already reached", self.name))
+            print(f"No space to hire under Vice President {self.name}")
 
-    def layoff_employee(self):
-        pass  # Logic for laying off to be implemented later
+    def fire(self, supervisor):
+        if supervisor in self.supervisors:
+            self.supervisors.remove(supervisor)
+        else:
+            print(f"{supervisor.name} is not under Vice President {self.name}")
 
-    def fire_employee(self, supervisor):
-        self.subordinates.remove(supervisor)
-    
-    def transfer_employee(self):
-        pass  # Logic for transferring to be implemented later
+    def display(self, indent=0):
+        print(" " * indent + f"Vice President: {self.name}")
+        for supervisor in self.supervisors:
+            supervisor.display(indent + 2)
 
-    def quit(self):
-        self.overseer.fire_employee(self)
+    def promote(self, supervisor):
+        if supervisor in self.supervisors:
+            self.supervisors.remove(supervisor)
+            promoted_vp = VicePresident(supervisor.name)
+            print(f"Promoted {supervisor.name} to Vice President.")
+            return promoted_vp
+        else:
+            print(f"Cannot promote {supervisor.name}, they are not under Vice President {self.name}.")
+            return None
 
-    def show_details(self):
-        pass  # Display logic to be implemented later
+    def handle_firing(self, president):
+        """Handle VP firing - promote a supervisor"""
+        if len(self.supervisors) > 0:
+            new_vp = self.supervisors.pop(0)
+            president.hire(VicePresident(new_vp.name))
+            print(f"Promoted Supervisor {new_vp.name} to Vice President.")
+        else:
+            print(f"No Supervisors left to promote under Vice President {self.name}")
 
-# Composite: President class (can have vice presidents)
 class President(Employee):
     def __init__(self, name):
         super().__init__(name)
-        self.subordinates = []  # List to store subordinate vice presidents
-        self.maxSubordinates = 2  # List to store subordinate workers
-        self.overseer = None
+        self.vice_presidents = []  # The president can manage up to 2 VPs
 
-    def setOverseer(self, overseer):
-        self.overseer = overseer
-
-    def promote_employee(self):
-        pass  # Logic for promoting to be implemented later
-
-    def hire_employee(self, vicePresident):
-        if vicePresident.name == "":
-            self.subordinates.append(vicePresident)
-        elif len(self.subordinates) < self.maxSubordinates:
-            self.subordinates.append(vicePresident)
-            vicePresident.setOverseer(self)
+    def hire(self, vice_president):
+        if len(self.vice_presidents) < 2:
+            self.vice_presidents.append(vice_president)
         else:
-            print(str.format("Unable to hire new Vice Presidents. Max workers for President {} already reached",self.name))
-    
-    def layoff_employee(self):
-        pass  # Logic for laying off to be implemented later
+            print(f"No space to hire under President {self.name}")
 
-    def fire_employee(self, vicePresident):
-        self.subordinates.remove(vicePresident)
+    def fire(self, vice_president):
+        if vice_president in self.vice_presidents:
+            vice_president.handle_firing(self)  # Promote one of their supervisors
+            self.vice_presidents.remove(vice_president)
+        else:
+            print(f"{vice_president.name} is not under President {self.name}")
 
-    def show_details(self):
-        pass  # Display logic to be implemented later
+    def display(self, indent=0):
+        print(" " * indent + f"President: {self.name}")
+        for vp in self.vice_presidents:
+            vp.display(indent + 2)
+
+    def promote(self, vp):
+        raise Exception("Cannot promote a Vice President to President!")
