@@ -3,6 +3,5 @@ Software Test and Quality Engineering.
 
 Project #4
 
-![Project_4-1](https://github.com/user-attachments/assets/ff3013ad-b01a-4915-bd1f-0886d7bba000)
-![Project_4-2](https://github.com/user-attachments/assets/ef4f804a-8c2a-4ac6-8f1b-94102ab684f4)
-
+![Project_4-1](https://github.com/user-attachments/assets/5cdc815e-8714-4a37-9250-b48f1c3cb6a5)
+![Project_4-2](https://github.com/user-attachments/assets/699caedc-60fb-47e2-a2d0-75f0840bc9da)
