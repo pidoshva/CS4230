@@ -1,7 +1,7 @@
 President: Bob
-Vice President: Ted
-Supervisor: Daniel
-Worker: Adam
+Vice President: Daniel
+Supervisor: Lana
+Worker: Don
 Supervisor: Pellas
 Worker: Melissande
 Worker: Bobbby
@@ -10,3 +10,5 @@ Supervisor: Smith
 Worker: Clara1
 Worker: Clara2
 Worker: Clara3
+Worker: Clara5
+Worker: Clara6
