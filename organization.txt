@@ -4,6 +4,11 @@ Supervisor: Ted
 Worker: Wolfgang
 Supervisor: Pellas
 Worker: Melissande
+Worker: Bobbby
 Vice President: David
 Supervisor: Smith
-Worker: Clara
+Worker: Clara1
+Worker: Clara2
+Worker: Clara3
+Worker: Clara4
+Worker: Clara5
