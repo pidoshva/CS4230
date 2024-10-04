@@ -3,34 +3,34 @@ Project #4
 The Dysfunctional Organization System
 [Vadim Pidoshva, Trajan Clark, Jessica Adams, Cameron Seppi]
 """
+import sys
 import employees
 
 # Global Hash Set that contains all currently used unique employee names
-# Used for read_organization and hiring validation
 employee_names_used = set()
 
 # Counters for employees during read_organization
-# Used ONLY during read_organization validation
 pres_count = 0
 vp_count = 0
 supervisor_count = 0
 worker_count = 0
 
-# Bool that is set based organization initialization success or failure
-# Used ONLY during read_organization validation
+# Flag for organization read success or failure
 read_organization_success = True
 
-# Returns True if the name is already in the hash set and False otherwise
-# Used during read_organization and during hiring validation
 def check_employee_name_uniqueness(name):
+    """
+    Check if the employee name is unique (not already used in the organization).
+    """
     if name in employee_names_used:
-        return True
-    else:
         return False
-
+    employee_names_used.add(name)
+    return True
 
 def display_organization(president):
-    """Utility function to display the organization hierarchy"""
+    """
+    Utility function to display the organization hierarchy.
+    """
     president.display()
 
 def read_organization(filename='organization.txt'):
@@ -39,8 +39,6 @@ def read_organization(filename='organization.txt'):
 
     Reads the organization structure from a file and creates the employee hierarchy.
     """
-    print(f"Creating company organization from file {filename}\n")
-
     global read_organization_success
 
     with open(filename, 'r') as f:
@@ -50,58 +48,47 @@ def read_organization(filename='organization.txt'):
     current_vp = None
     current_supervisor = None
 
-    # Global counters
-    global pres_count
-    global vp_count
-    global supervisor_count
-    global worker_count
+    global pres_count, vp_count, supervisor_count, worker_count
 
     for line in lines:
-        if line != "" and line != '\n':
+        if line.strip():
             parts = line.strip().split(': ')
             role = parts[0]
             name = parts[1]
+
             if role == "President":
-                # Create the President
                 pres_count += 1
-                if name in employee_names_used:
+                if not check_employee_name_uniqueness(name) or pres_count > 1:
                     read_organization_success = False
-                if pres_count > 1:
-                    read_organization_success = False
+                    break
                 president = employees.President(name)
-                employee_names_used.add(name)
+
             elif role == "Vice President":
-                # Create and assign Vice President to the President
                 vp_count += 1
-                if name in employee_names_used:
+                if not check_employee_name_uniqueness(name) or vp_count > 2:
                     read_organization_success = False
-                if vp_count > 2:
-                    read_organization_success = False
+                    break
                 vp = employees.VicePresident(name)
                 president.hire(vp)
                 current_vp = vp
-                employee_names_used.add(name)
+
             elif role == "Supervisor":
-                # Create and assign Supervisor to the Vice President
                 supervisor_count += 1
-                if name in employee_names_used:
+                if not check_employee_name_uniqueness(name) or supervisor_count > 4:
                     read_organization_success = False
-                if supervisor_count > 4:
-                    read_organization_success = False
+                    break
                 supervisor = employees.Supervisor(name)
                 current_vp.hire(supervisor)
                 current_supervisor = supervisor
-                employee_names_used.add(name)
+
             elif role == "Worker":
-                # Create and assign Worker to the Supervisor
                 worker_count += 1
-                if name in employee_names_used:
+                if not check_employee_name_uniqueness(name) or worker_count > 10:
                     read_organization_success = False
-                if supervisor_count > 10:
-                    read_organization_success = False
+                    break
                 worker = employees.Worker(name)
                 current_supervisor.hire(worker)
-                employee_names_used.add(name)
+
     return president
 
 def save_organization(president, filename='organization.txt'):
@@ -121,18 +108,11 @@ def save_organization(president, filename='organization.txt'):
 
 def handle_quit(president):
     """
-    Handle quitting employees.
-
-    When an employee quits, it is handled in a similar way as firing them.
+    Handle quitting employees. Employees who quit are removed from the organization.
     """
-    while True:
-        role = input("Enter role to quit (worker, supervisor, vp): ").strip().lower()
-        if role == "worker" or role == "supervisor" or role == "vp":
-            break
-
+    role = input("Enter role to quit (worker, supervisor, vp): ").strip().lower()
     name = input("Enter name of person quitting: ").strip()
 
-    # Worker quits
     if role == "worker":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
@@ -143,10 +123,8 @@ def handle_quit(president):
                         print(f"Worker {name} quit")
                         save_organization(president)
                         return
-
         print(f"Worker {name} not found")
 
-    # Supervisor quits
     elif role == "supervisor":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
@@ -156,35 +134,25 @@ def handle_quit(president):
                     print(f"Supervisor {name} quit")
                     save_organization(president)
                     return
-
         print(f"Supervisor {name} not found")
 
-    # Vice President quits
     elif role == "vp":
         for vp in president.vice_presidents:
             if vp.name == name:
                 employee_names_used.discard(name)
                 vp.quit(president)
-                print(f"Vice President {name} quits")
+                print(f"Vice President {name} quit")
                 save_organization(president)
                 return
-
-        print(f"Vice President {name} not found.")
+        print(f"Vice President {name} not found")
 
 def handle_firing(president):
     """
     Handle firing employees and promote their replacements.
-
-    Based on the role (worker, supervisor, vp), the employee is fired, and all employees under them are also fired
     """
-    while True:
-        role = input("Enter role to fire (worker, supervisor, vp): ").strip().lower()
-        if role == "worker" or role == "supervisor" or role == "vp":
-            break
-
+    role = input("Enter role to fire (worker, supervisor, vp): ").strip().lower()
     name = input("Enter name to fire: ").strip()
 
-    # Firing a Worker
     if role == "worker":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
@@ -195,10 +163,8 @@ def handle_firing(president):
                         print(f"Fired worker {name}")
                         save_organization(president)
                         return
-
         print(f"Worker {name} not found")
 
-    # Firing a Supervisor
     elif role == "supervisor":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
@@ -208,10 +174,8 @@ def handle_firing(president):
                     print(f"Fired Supervisor {name}")
                     save_organization(president)
                     return
-
         print(f"Supervisor {name} not found")
 
-    # Firing a Vice President
     elif role == "vp":
         for vp in president.vice_presidents:
             if vp.name == name:
@@ -220,169 +184,82 @@ def handle_firing(president):
                 print(f"Fired Vice President {name}")
                 save_organization(president)
                 return
-
-        print(f"Vice President {name} not found.")
-
+        print(f"Vice President {name} not found")
 
 def handle_layoff(president):
     """
-    Handle laying off employees.
-
-    Based on the role (worker, supervisor, vp), the employee is laid off, and then moved to the same position if available
+    Handle laying off employees and attempt to relocate them.
     """
-    while True:
-        role = input("Enter role to layoff (worker, supervisor, vp): ").strip().lower()
-        if role == "worker" or role == "supervisor" or role == "vp":
-            break
-
+    role = input("Enter role to layoff (worker, supervisor, vp): ").strip().lower()
     name = input("Enter name to layoff: ").strip()
 
-    employee_initiating_layoff = ""
-    saved_employee = None
-    transfered = False
+    employee_to_relocate = None
+    relocated = False
 
-    # Fire Worker
+    # Layoff Worker
     if role == "worker":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
                 for worker in supervisor.workers:
                     if worker.name == name:
                         employee_names_used.discard(name)
-                        saved_employee = worker
                         supervisor.fire(worker)
-                        employee_initiating_layoff = supervisor.name
-                        print(f"Fired worker {name}")
-                        save_organization(president)
-
-        # Attempt to move worker somewhere else
-        if employee_initiating_layoff != "":
-            # Attempt to hire in same supervisory area
-            for vp in president.vice_presidents:
-                if transfered == True:
-                    break
-                for supervisor in vp.supervisors:
-                    if transfered == True:
+                        employee_to_relocate = worker
                         break
-                    if supervisor.name == employee_initiating_layoff:
-                        # 4 Becuase you cannot relocate to the original position so 5-1
-                        if len(supervisor.workers) >= 4:
-                            break
-                        else:
-                            supervisor.hire(saved_employee)
-                            transfered = True
 
-            # Attempt to hire in different supervisory area
-            for vp in president.vice_presidents:
-                if transfered == True:
-                    break
-                for supervisor in vp.supervisors:
-                    if transfered == True:
-                        break
-                    if supervisor.name != employee_initiating_layoff:
-                        # 4 Becuase you cannot relocate to the original position so 5-1
-                        if len(supervisor.workers) >= 5:
-                            break
-                        else:
-                            supervisor.hire(saved_employee)
-                            transfered = True
-
-            if transfered:
-                print("Employee Relocated")
-                save_organization(president)
-                return
-            else:
-                print("Employee laid off and unable to be relocated")
-                save_organization(president)
-                return
-            
-        print(f"Worker {name} not found")
-
+    # Layoff Supervisor
     elif role == "supervisor":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
                 if supervisor.name == name:
                     employee_names_used.discard(name)
-                    saved_employee = supervisor
+                    employee_to_relocate = supervisor
                     vp.fire(supervisor)
-                    employee_initiating_layoff = vp.name
-                    print(f"Fired Supervisor {name}")
-                    save_organization(president)
-
-        # Attempt to move worker somewhere else
-        if employee_initiating_layoff != "":
-
-            # Attempt to hire in same supervisory area
-            for vp in president.vice_presidents:
-                if transfered == True:
                     break
-                if vp.name == employee_initiating_layoff:
-                    # 4 Becuase you cannot relocate to the original position so 2-1
-                    if len(vp.supervisors) >= 1:
-                        break
-                    else:
-                        vp.hire(saved_employee)
-                        transfered = True
 
-            # Attempt to hire in different supervisory area
-            for vp in president.vice_presidents:
-                if transfered == True:
-                    break
-                if vp.name != employee_initiating_layoff:
-                    if len(vp.supervisors) >= 2:
-                        break
-                    else:
-                        vp.hire(saved_employee)
-                        transfered = True
-
-            if transfered:
-                print("Employee Relocated")
-                save_organization(president)
-                return
-            else:
-                print("Employee laid off and unable to be relocated")
-                save_organization(president)
-                return
-
-        print(f"Supervisor {name} not found")
-
+    # Layoff VP
     elif role == "vp":
         for vp in president.vice_presidents:
             if vp.name == name:
                 employee_names_used.discard(name)
-                saved_employee = vp
+                employee_to_relocate = vp
                 president.fire(vp)
-                employee_initiating_layoff = president.name
-                print(f"Fired Vice President {name}")
-                save_organization(president)
+                break
 
-        # Attempt to move VP to other VP position
-        if employee_initiating_layoff != "":
-            if len(president.vice_presidents) > 0:
-                pass
-            else:
-                president.hire(saved_employee)
-                transfered = True
+    # Attempt relocation
+    if employee_to_relocate:
+        relocated = relocate_employee(president, employee_to_relocate, role)
 
-        if transfered:
-            print("Employee Relocated")
-            return
-        elif transfered != True:
-            print("Employee laid off and unable to be relocated")
-            return
+    if relocated:
+        print(f"{role.capitalize()} {name} relocated.")
+    else:
+        print(f"{role.capitalize()} {name} laid off and unable to be relocated.")
 
-        print(f"Vice President {name} not found.")
+    # Save the updated organization after relocation
+    save_organization(president)
+
+
+def relocate_employee(president, employee, role):
+    """
+    Relocate an employee to a new position, if available.
+    """
+    for vp in president.vice_presidents:
+        if role == "worker":
+            for supervisor in vp.supervisors:
+                if len(supervisor.workers) < 5:
+                    supervisor.hire(employee)
+                    return True
+        elif role == "supervisor" and len(vp.supervisors) < 3:
+            vp.hire(employee)
+            return True
+
+    return False
 
 def handle_promotion(president):
     """
     Handle promotions for workers and supervisors.
-
-    Promote a worker to supervisor or a supervisor to vice president.
     """
-    while True:
-        role = input("Enter role to promote (worker, supervisor): ").strip().lower()
-        if role == "worker" or role == "supervisor":
-            break
-
+    role = input("Enter role to promote (worker, supervisor): ").strip().lower()
     name = input("Enter name to promote: ").strip()
 
     if role == "worker":
@@ -395,9 +272,7 @@ def handle_promotion(president):
                             vp.promote(worker, supervisor)
                             save_organization(president)
                             return
-                    print(f"Worker {name} not found under Supervisor {supervisor_name}")
-                    return
-        print(f"Supervisor {supervisor_name} not found.")
+        print(f"Worker {name} not found under Supervisor {supervisor_name}")
 
     elif role == "supervisor":
         vp_name = input("Enter current VP's name: ").strip()
@@ -408,17 +283,13 @@ def handle_promotion(president):
                         president.promote(supervisor, vp)
                         save_organization(president)
                         return
-                print(f"Supervisor {name} not found under VP {vp_name}")
-                return
-        print(f"Vice President {vp_name} not found.")
+        print(f"Supervisor {name} not found under VP {vp_name}")
 
 def handle_hiring(president):
-    """Handle hiring new employees (workers, supervisors, or vice presidents)"""
-    while True:
-        role = input("Enter role (worker, supervisor, vp): ").strip().lower()
-        if role == "worker" or role == "supervisor" or role == "vp":
-            break
-
+    """
+    Handle hiring new employees (workers, supervisors, or vice presidents).
+    """
+    role = input("Enter role (worker, supervisor, vp): ").strip().lower()
     name = input("Enter name: ").strip()
 
     if role == "worker":
@@ -426,39 +297,40 @@ def handle_hiring(president):
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
                 if supervisor.name == supervisor_name:
-                    if name in employee_names_used:
-                        print("Name is not unique, hiring failed...")
+                    if not check_employee_name_uniqueness(name):
+                        print("Name is not unique, hiring failed.")
                         return
-                    employee_names_used.add(name)
                     worker = employees.Worker(name)
                     supervisor.hire(worker)
                     save_organization(president)
                     return
-            print(f"Supervisor {supervisor_name} not found")
+        print(f"Supervisor {supervisor_name} not found.")
+
     elif role == "supervisor":
         vp_name = input("Enter VP's name: ").strip()
         for vp in president.vice_presidents:
             if vp.name == vp_name:
-                if name in employee_names_used:
-                    print("Name is not unique, hiring failed...")
+                if not check_employee_name_uniqueness(name):
+                    print("Name is not unique, hiring failed.")
                     return
-                employee_names_used.add(name)
                 supervisor = employees.Supervisor(name)
                 vp.hire(supervisor)
                 save_organization(president)
                 return
-        print(f"Vice President {vp_name} not found")
+        print(f"Vice President {vp_name} not found.")
+
     elif role == "vp":
-        if name in employee_names_used:
-            print("Name is not unique, hiring failed...")
+        if not check_employee_name_uniqueness(name):
+            print("Name is not unique, hiring failed.")
             return
-        employee_names_used.add(name)
         vp = employees.VicePresident(name)
         president.hire(vp)
         save_organization(president)
 
 def command_loop(president):
-    """Command loop for interaction with the organization"""
+    """
+    Command loop for interaction with the organization.
+    """
     while True:
         command = input("Enter command (hire, fire, promote, quit, display, layoff, q): ").strip().lower()
         if command == "display":
@@ -479,19 +351,22 @@ def command_loop(president):
             print("Invalid command.")
 
 def main():
-    """Main function: Read organization and start command loop"""
-    president = read_organization()
+    """
+    Main function: Read organization and start command loop.
+    """
+    if len(sys.argv) != 2:
+        print("Usage: python3 main.py <organization_file>")
+        sys.exit(1)
 
-    # Check error flag
-    if (read_organization_success):
+    organization_file = sys.argv[1]
+    president = read_organization(organization_file)
+
+    if read_organization_success:
         print("Organization read from file is valid")
+        command_loop(president)
     else:
         print("Organization read from file is invalid, Exiting Program...")
-        # Exit if error flag has been hit
-        return 1
-    
-    print(employee_names_used)
-    command_loop(president)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

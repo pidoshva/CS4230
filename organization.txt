@@ -1,10 +1,11 @@
 President: Bob
-Vice President: Carol
-Supervisor: Ted
-Worker: Wolfgang
+Vice President: Ted
+Supervisor: Wolfgang
+Worker: Daniel
 Supervisor: Pellas
 Worker: Melissande
 Worker: Bobbby
+Supervisor: Adam
 Vice President: David
 Supervisor: Smith
 Worker: Clara1
