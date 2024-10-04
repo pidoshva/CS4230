@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class Employee(ABC): #abstract
+class Employee(ABC):
     def __init__(self, name):
         self.name = name
 
@@ -13,7 +13,7 @@ class Employee(ABC): #abstract
         pass
 
     @abstractmethod
-    def quit(self,overseer):
+    def quit(self, overseer):
         pass
 
     @abstractmethod
@@ -23,6 +23,7 @@ class Employee(ABC): #abstract
     @abstractmethod
     def promote(self, employee, overseer):
         pass
+
 
 class Worker(Employee):
     def hire(self, employee):
@@ -40,16 +41,13 @@ class Worker(Employee):
     def promote(self, employee, overseer):
         raise Exception("Cannot promote under a worker")
 
+
 class Supervisor(Employee):
     def __init__(self, name):
         super().__init__(name)
         self.workers = []  # A supervisor can manage up to 5 workers
 
     def hire(self, worker):
-        for w in self.workers:
-            if w.name == worker.name:
-                print(f"Worker {worker.name} already exists under Supervisor {self.name}")
-                return
         if len(self.workers) < 5:
             self.workers.append(worker)
             print(f"Hired worker {worker.name} under Supervisor {self.name}")
@@ -59,6 +57,7 @@ class Supervisor(Employee):
     def fire(self, worker):
         if worker in self.workers:
             self.workers.remove(worker)
+            print(f"Fired worker {worker.name} from Supervisor {self.name}")
         else:
             print(f"{worker.name} is not under Supervisor {self.name}")
 
@@ -71,18 +70,19 @@ class Supervisor(Employee):
             worker.display(indent + 2)
 
     def promote(self, employee, overseer):
-        """Promotes a worker to supervisor after supervisor is promoted to vp"""
+        """Promote the first worker under this supervisor to a supervisor"""
         if len(self.workers) > 0:
-            worker_to_promote = self.workers.pop(0)
-            new_supervisor = Supervisor(worker_to_promote.name)
-            for current_worker in self.workers:
-                new_supervisor.hire(current_worker)
+            promoted_worker = self.workers.pop(0)
+            new_supervisor = Supervisor(promoted_worker.name)
+            new_supervisor.workers = self.workers
+            print(f"Promoted Worker {promoted_worker.name} to Supervisor.")
             return new_supervisor
         return None
 
     def remove_employee(self, worker):
         if worker in self.workers:
             self.workers.remove(worker)
+
 
 class VicePresident(Employee):
     def __init__(self, name):
@@ -98,9 +98,24 @@ class VicePresident(Employee):
 
     def fire(self, supervisor):
         if supervisor in self.supervisors:
-            self.supervisors.remove(supervisor)
+            if supervisor.workers:
+                # Promote the first worker to Supervisor
+                promoted_worker = supervisor.workers.pop(0)
+                new_supervisor = Supervisor(promoted_worker.name)
+
+                # Transfer remaining workers to the new supervisor
+                new_supervisor.workers = supervisor.workers
+
+                # Replace the old supervisor with the new one
+                self.supervisors[self.supervisors.index(supervisor)] = new_supervisor
+                print(f"Promoted Worker {promoted_worker.name} to Supervisor and replaced {supervisor.name}.")
+            else:
+                # If no workers, simply remove the supervisor
+                self.supervisors.remove(supervisor)
+                print(f"Fired Supervisor {supervisor.name}.")
         else:
-            print(f"{supervisor.name} is not under Vice President {self.name}")
+            print(f"{supervisor.name} is not under Vice President {self.name}.")
+
 
     def quit(self, president):
         president.fire(self)
@@ -115,13 +130,12 @@ class VicePresident(Employee):
             new_supervisor = Supervisor(worker.name)
             supervisor.remove_employee(worker)
             self.supervisors.append(new_supervisor)
-            print(f"Promoted Worker {new_supervisor.name} to Supervisor under Vice President {self.name}")
-
+            print(f"Promoted Worker {worker.name} to Supervisor under Vice President {self.name}")
         else:
             print(f"No space to promote under Vice President {self.name}")
 
     def handle_promote(self, supervisor):
-        """Handle supervisor promotion to vp - promote a new supervisor"""
+        """Handle supervisor promotion to VP - promote a new supervisor"""
         if supervisor in self.supervisors:
             new_supervisor = supervisor.promote(None, None)
             self.supervisors.remove(supervisor)
@@ -143,9 +157,31 @@ class President(Employee):
 
     def fire(self, vice_president):
         if vice_president in self.vice_presidents:
-            self.vice_presidents.remove(vice_president)
+            if vice_president.supervisors:
+                # Promote the first supervisor to VP
+                promoted_supervisor = vice_president.supervisors.pop(0)
+                new_vp = VicePresident(promoted_supervisor.name)
+
+                # Check if the promoted supervisor has workers to promote to a supervisor
+                if promoted_supervisor.workers:
+                    promoted_worker = promoted_supervisor.workers.pop(0)
+                    new_supervisor = Supervisor(promoted_worker.name)  # New Supervisor instance for promoted worker
+                    new_supervisor.workers = promoted_supervisor.workers  # Transfer workers to the new supervisor
+                    new_vp.supervisors.append(new_supervisor)  # Add the new supervisor under the new VP
+                    print(f"Promoted Worker {promoted_worker.name} to Supervisor and replaced {promoted_supervisor.name}.")
+                else:
+                    print(f"No workers to promote under Supervisor {promoted_supervisor.name}.")
+
+                new_vp.supervisors += vice_president.supervisors  # Transfer remaining supervisors under the new VP
+                self.vice_presidents[self.vice_presidents.index(vice_president)] = new_vp
+                print(f"Promoted Supervisor {new_vp.name} to Vice President and replaced {vice_president.name}.")
+            else:
+                # If no supervisors, just remove the VP
+                self.vice_presidents.remove(vice_president)
+                print(f"Fired Vice President {vice_president.name}.")
         else:
-            print(f"{vice_president.name} is not under President {self.name}")
+            print(f"{vice_president.name} is not under President {self.name}.")
+
 
     def quit(self, overseer):
         raise Exception("President can't quit")
@@ -161,6 +197,5 @@ class President(Employee):
             vp.handle_promote(supervisor)
             self.vice_presidents.append(new_vp)
             print(f"Promoted Supervisor {new_vp.name} to Vice President under President {self.name}")
-
         else:
             print(f"No space to promote under President {self.name}")
