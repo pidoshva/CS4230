@@ -221,8 +221,7 @@ def handle_layoff(president):
                     if transfered == True:
                         break
                     if supervisor.name == employee_initiating_layoff:
-                        # 4 Becuase you cannot relocate to the original position so 5-1
-                        if len(supervisor.workers) >= 4:
+                        if len(supervisor.workers) >= 5:
                             break
                         else:
                             supervisor.hire(saved_employee)
@@ -235,7 +234,6 @@ def handle_layoff(president):
                     if transfered == True:
                         break
                     if supervisor.name != employee_initiating_layoff:
-                        # 4 Becuase you cannot relocate to the original position so 5-1
                         if len(supervisor.workers) >= 5:
                             break
                         else:
@@ -249,7 +247,7 @@ def handle_layoff(president):
                 print("Employee laid off and unable to be relocated")
                 save_organization(president)
                 return
-            
+
         print(f"Worker {name} not found")
     elif role == "supervisor":
         for vp in president.vice_presidents:
@@ -261,15 +259,14 @@ def handle_layoff(president):
                     employee_initiating_layoff = vp.name
                     print(f"Fired Supervisor {name}")
                     save_organization(president)
-        # Attempt to move worker somewhere else
+        # Attempt to move supervisor somewhere else
         if employee_initiating_layoff != "":
             # Attempt to hire in same supervisory area
             for vp in president.vice_presidents:
                 if transfered == True:
                     break
                 if vp.name == employee_initiating_layoff:
-                    # 4 Becuase you cannot relocate to the original position so 2-1
-                    if len(vp.supervisors) >= 1:
+                    if len(vp.supervisors) >= 3:
                         break
                     else:
                         vp.hire(saved_employee)
@@ -279,7 +276,7 @@ def handle_layoff(president):
                 if transfered == True:
                     break
                 if vp.name != employee_initiating_layoff:
-                    if len(vp.supervisors) >= 2:
+                    if len(vp.supervisors) >= 3:
                         break
                     else:
                         vp.hire(saved_employee)
@@ -351,7 +348,9 @@ def handle_promotion(president):
                             vp.promote(worker, supervisor)
                             save_organization(president)
                             return
-        print(f"Worker {name} not found under Supervisor {supervisor_name}")
+                    print(f"Worker {name} not found under Supervisor {supervisor_name}")
+        print(f"Supervisor {supervisor_name} not found")
+
 
     elif role == "supervisor":
         vp_name = input("Enter current VP's name: ").strip()
@@ -362,7 +361,8 @@ def handle_promotion(president):
                         president.promote(supervisor, vp)
                         save_organization(president)
                         return
-        print(f"Supervisor {name} not found under VP {vp_name}")
+                print(f"Supervisor {name} not found under VP {vp_name}")
+        print(f"Vice President {vp_name} not found")
 
 def handle_hiring(president):
     """

@@ -105,6 +105,7 @@ class VicePresident(Employee):
 
                 # Transfer remaining workers to the new supervisor
                 new_supervisor.workers = supervisor.workers
+                supervisor.workers = []
 
                 # Replace the old supervisor with the new one
                 self.supervisors[self.supervisors.index(supervisor)] = new_supervisor
@@ -168,6 +169,7 @@ class President(Employee):
                     new_supervisor = Supervisor(promoted_worker.name)  # New Supervisor instance for promoted worker
                     new_supervisor.workers = promoted_supervisor.workers  # Transfer workers to the new supervisor
                     new_vp.supervisors.append(new_supervisor)  # Add the new supervisor under the new VP
+                    vice_president.supervisors = []
                     print(f"Promoted Worker {promoted_worker.name} to Supervisor and replaced {promoted_supervisor.name}.")
                 else:
                     print(f"No workers to promote under Supervisor {promoted_supervisor.name}.")
