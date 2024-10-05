@@ -3,12 +3,12 @@ Vice President: Ted
 Supervisor: Wolfgang
 Worker: Daniel1
 Worker: Daniel2
+Vice President: David
+Supervisor: Smith
 Worker: Clara1
+Worker: Clara2
+Worker: Clara3
 Supervisor: John
 Worker: Sarah1
 Worker: Sarah2
 Worker: Sarah3
-Supervisor: Smith
-Worker: Clara2
-Worker: Clara3
-Vice President: David
