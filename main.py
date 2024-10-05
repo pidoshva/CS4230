@@ -195,6 +195,7 @@ def handle_layoff(president):
 
     employee_to_relocate = None
     relocated = False
+    found = True
 
     # Layoff Worker
     if role == "worker":
@@ -206,6 +207,8 @@ def handle_layoff(president):
                         supervisor.fire(worker)
                         employee_to_relocate = worker
                         break
+        print(f"Worker {name} not found")
+        found = False
 
     # Layoff Supervisor
     elif role == "supervisor":
@@ -216,6 +219,8 @@ def handle_layoff(president):
                     employee_to_relocate = supervisor
                     vp.fire(supervisor)
                     break
+        print(f"Supervisor {name} not found")
+        found = False
 
     # Layoff VP
     elif role == "vp":
@@ -225,15 +230,18 @@ def handle_layoff(president):
                 employee_to_relocate = vp
                 president.fire(vp)
                 break
+        print(f"Vice President {name} not found")
+        found = False
 
     # Attempt relocation
     if employee_to_relocate:
         relocated = relocate_employee(president, employee_to_relocate, role)
 
-    if relocated:
-        print(f"{role.capitalize()} {name} relocated.")
-    else:
-        print(f"{role.capitalize()} {name} laid off and unable to be relocated.")
+    if found:
+        if relocated:
+            print(f"{role.capitalize()} {name} relocated.")
+        else:
+            print(f"{role.capitalize()} {name} laid off and unable to be relocated.")
 
     # Save the updated organization after relocation
     save_organization(president)
@@ -250,7 +258,12 @@ def relocate_employee(president, employee, role):
                     supervisor.hire(employee)
                     return True
         elif role == "supervisor" and len(vp.supervisors) < 3:
+            employee.workers = []
             vp.hire(employee)
+            return True
+        elif role == "vp" and len(president.vice_presidents) < 2:
+            employee.supervisors = []
+            president.hire(employee)
             return True
 
     return False
@@ -272,7 +285,8 @@ def handle_promotion(president):
                             vp.promote(worker, supervisor)
                             save_organization(president)
                             return
-        print(f"Worker {name} not found under Supervisor {supervisor_name}")
+                    print(f"Worker {name} not found under Supervisor {supervisor_name}")
+        print(f"Supervisor {supervisor_name} not found")
 
     elif role == "supervisor":
         vp_name = input("Enter current VP's name: ").strip()
@@ -283,7 +297,8 @@ def handle_promotion(president):
                         president.promote(supervisor, vp)
                         save_organization(president)
                         return
-        print(f"Supervisor {name} not found under VP {vp_name}")
+                print(f"Supervisor {name} not found under VP {vp_name}")
+        print(f"Vice President {vp_name} not found")
 
 def handle_hiring(president):
     """
