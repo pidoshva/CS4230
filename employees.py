@@ -26,10 +26,10 @@ class Employee(ABC):
 
 
 class Worker(Employee):
-    def hire(self, employee):
+    def hire(self):
         raise Exception("Cannot hire under a worker")
 
-    def fire(self, employee):
+    def fire(self):
         raise Exception("Cannot fire under a worker")
 
     def quit(self, supervisor):
@@ -38,7 +38,7 @@ class Worker(Employee):
     def display(self, indent=0):
         print(" " * indent + f"Worker: {self.name}")
 
-    def promote(self, employee, overseer):
+    def promote(self):
         raise Exception("Cannot promote under a worker")
 
 
@@ -69,7 +69,7 @@ class Supervisor(Employee):
         for worker in self.workers:
             worker.display(indent + 2)
 
-    def promote(self, employee, overseer):
+    def promote(self):
         """Promote the first worker under this supervisor to a supervisor"""
         if len(self.workers) > 0:
             promoted_worker = self.workers.pop(0)
@@ -169,6 +169,8 @@ class President(Employee):
                     new_supervisor = Supervisor(promoted_worker.name)  # New Supervisor instance for promoted worker
                     new_supervisor.workers = promoted_supervisor.workers  # Transfer workers to the new supervisor
                     new_vp.supervisors.append(new_supervisor)  # Add the new supervisor under the new VP
+                    for i in vice_president.supervisors:
+                        new_vp.supervisors.append(i)
                     vice_president.supervisors = []
                     print(f"Promoted Worker {promoted_worker.name} to Supervisor and replaced {promoted_supervisor.name}.")
                 else:
@@ -185,7 +187,7 @@ class President(Employee):
             print(f"{vice_president.name} is not under President {self.name}.")
 
 
-    def quit(self, overseer):
+    def quit(self):
         raise Exception("President can't quit")
 
     def display(self, indent=0):

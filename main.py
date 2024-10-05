@@ -74,7 +74,7 @@ def read_organization(filename='organization.txt'):
 
             elif role == "Supervisor":
                 supervisor_count += 1
-                if not check_employee_name_uniqueness(name) or supervisor_count > 4:
+                if not check_employee_name_uniqueness(name) or supervisor_count > 6:
                     read_organization_success = False
                     break
                 supervisor = employees.Supervisor(name)
@@ -83,7 +83,7 @@ def read_organization(filename='organization.txt'):
 
             elif role == "Worker":
                 worker_count += 1
-                if not check_employee_name_uniqueness(name) or worker_count > 10:
+                if not check_employee_name_uniqueness(name) or worker_count > 30:
                     read_organization_success = False
                     break
                 worker = employees.Worker(name)
@@ -406,12 +406,93 @@ def handle_hiring(president):
         president.hire(vp)
         save_organization(president)
 
+def handle_transfer(president):
+    """
+    Handle laying off employees.
+    Based on the role (worker, supervisor, vp), the employee is laid off, and then moved to the same position if available
+    """
+    while True:
+        role = input("Enter role to transfer (worker, supervisor): ").strip().lower()
+        if role == "worker" or role == "supervisor":
+            break
+    name = input("Enter name to transfer: ").strip()
+    employee_initiating_layoff = ""
+    saved_employee = None
+    superior = None
+    transfered = False
+    # Fire Worker
+    if role == "worker":
+        for vp in president.vice_presidents:
+            for supervisor in vp.supervisors:
+                for worker in supervisor.workers:
+                    if worker.name == name:
+                        employee_initiating_layoff = supervisor.name
+                        saved_employee = worker
+                        superior = supervisor
+        # Attempt to move worker somewhere else
+        if employee_initiating_layoff != "":
+            # Attempt to hire in different supervisory area
+            for vp in president.vice_presidents:
+                if transfered == True:
+                    break
+                for supervisor in vp.supervisors:
+                    if transfered == True:
+                        break
+                    if supervisor.name != employee_initiating_layoff:
+                        if len(supervisor.workers) >= 5:
+                            break
+                        else:
+                            supervisor.hire(saved_employee)
+                            transfered = True
+            if transfered:
+                print("Employee Relocated")
+                superior.fire(saved_employee)
+                employee_names_used.discard(name)
+                save_organization(president)
+                return
+            else:
+                print("Employee unable to be transfered")
+                save_organization(president)
+                return
+
+        print(f"Worker {name} not found")
+    elif role == "supervisor":
+        for vp in president.vice_presidents:
+            for supervisor in vp.supervisors:
+                if supervisor.name == name:
+                    superior = vp
+                    saved_employee = supervisor
+                    employee_initiating_layoff = vp.name
+        # Attempt to move supervisor somewhere else
+        if employee_initiating_layoff != "":
+            # Attempt to hire in different supervisory area
+            for vp in president.vice_presidents:
+                if transfered == True:
+                    break
+                if vp.name != employee_initiating_layoff:
+                    if len(vp.supervisors) >= 3:
+                        break
+                    else:
+                        vp.supervisors.append(saved_employee)
+                        transfered = True
+            if transfered:
+                print("Employee Relocated")
+                superior.supervisors.remove(saved_employee)
+                employee_names_used.discard(name)
+                save_organization(president)
+                return
+            else:
+                print("Employee unable to be transfered")
+                save_organization(president)
+                return
+        print(f"Supervisor {name} not found")
+
 def command_loop(president):
     """
     Command loop for interaction with the organization.
     """
     while True:
-        command = input("Enter command (hire, fire, promote, quit, display, layoff, q): ").strip().lower()
+        command = input("Enter command (hire, fire, promote, quit, display, layoff, transfer, q): ").strip().lower()
         if command == "display":
             display_organization(president)
         elif command == "hire":
@@ -422,6 +503,8 @@ def command_loop(president):
             handle_promotion(president)
         elif command == "layoff":
             handle_layoff(president)
+        elif command == "transfer":
+            handle_transfer(president)
         elif command == "quit":
             handle_quit(president)
         elif command == "q":
@@ -438,7 +521,12 @@ def main():
         sys.exit(1)
 
     organization_file = sys.argv[1]
-    president = read_organization(organization_file)
+
+    try:
+        president = read_organization(organization_file)
+    except Exception as e:
+        print("Organization read from file is invalid, Exiting Program...")
+        sys.exit(1)
 
     if read_organization_success:
         print("Organization read from file is valid")
