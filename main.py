@@ -188,55 +188,134 @@ def handle_firing(president):
 
 def handle_layoff(president):
     """
-    Handle laying off employees and attempt to relocate them.
+    Handle laying off employees.
+    Based on the role (worker, supervisor, vp), the employee is laid off, and then moved to the same position if available
     """
-    role = input("Enter role to layoff (worker, supervisor, vp): ").strip().lower()
+    while True:
+        role = input("Enter role to layoff (worker, supervisor, vp): ").strip().lower()
+        if role == "worker" or role == "supervisor" or role == "vp":
+            break
     name = input("Enter name to layoff: ").strip()
-
-    employee_to_relocate = None
-    relocated = False
-
-    # Layoff Worker
+    employee_initiating_layoff = ""
+    saved_employee = None
+    transfered = False
+    # Fire Worker
     if role == "worker":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
                 for worker in supervisor.workers:
                     if worker.name == name:
                         employee_names_used.discard(name)
+                        saved_employee = worker
                         supervisor.fire(worker)
-                        employee_to_relocate = worker
+                        employee_initiating_layoff = supervisor.name
+                        print(f"Fired worker {name}")
+                        save_organization(president)
+        # Attempt to move worker somewhere else
+        if employee_initiating_layoff != "":
+            # Attempt to hire in same supervisory area
+            for vp in president.vice_presidents:
+                if transfered == True:
+                    break
+                for supervisor in vp.supervisors:
+                    if transfered == True:
                         break
-
-    # Layoff Supervisor
+                    if supervisor.name == employee_initiating_layoff:
+                        # 4 Becuase you cannot relocate to the original position so 5-1
+                        if len(supervisor.workers) >= 4:
+                            break
+                        else:
+                            supervisor.hire(saved_employee)
+                            transfered = True
+            # Attempt to hire in different supervisory area
+            for vp in president.vice_presidents:
+                if transfered == True:
+                    break
+                for supervisor in vp.supervisors:
+                    if transfered == True:
+                        break
+                    if supervisor.name != employee_initiating_layoff:
+                        # 4 Becuase you cannot relocate to the original position so 5-1
+                        if len(supervisor.workers) >= 5:
+                            break
+                        else:
+                            supervisor.hire(saved_employee)
+                            transfered = True
+            if transfered:
+                print("Employee Relocated")
+                save_organization(president)
+                return
+            else:
+                print("Employee laid off and unable to be relocated")
+                save_organization(president)
+                return
+            
+        print(f"Worker {name} not found")
     elif role == "supervisor":
         for vp in president.vice_presidents:
             for supervisor in vp.supervisors:
                 if supervisor.name == name:
                     employee_names_used.discard(name)
-                    employee_to_relocate = supervisor
+                    saved_employee = supervisor
                     vp.fire(supervisor)
+                    employee_initiating_layoff = vp.name
+                    print(f"Fired Supervisor {name}")
+                    save_organization(president)
+        # Attempt to move worker somewhere else
+        if employee_initiating_layoff != "":
+            # Attempt to hire in same supervisory area
+            for vp in president.vice_presidents:
+                if transfered == True:
                     break
-
-    # Layoff VP
+                if vp.name == employee_initiating_layoff:
+                    # 4 Becuase you cannot relocate to the original position so 2-1
+                    if len(vp.supervisors) >= 1:
+                        break
+                    else:
+                        vp.hire(saved_employee)
+                        transfered = True
+            # Attempt to hire in different supervisory area
+            for vp in president.vice_presidents:
+                if transfered == True:
+                    break
+                if vp.name != employee_initiating_layoff:
+                    if len(vp.supervisors) >= 2:
+                        break
+                    else:
+                        vp.hire(saved_employee)
+                        transfered = True
+            if transfered:
+                print("Employee Relocated")
+                save_organization(president)
+                return
+            else:
+                print("Employee laid off and unable to be relocated")
+                save_organization(president)
+                return
+        print(f"Supervisor {name} not found")
     elif role == "vp":
         for vp in president.vice_presidents:
             if vp.name == name:
                 employee_names_used.discard(name)
-                employee_to_relocate = vp
+                saved_employee = vp
                 president.fire(vp)
-                break
-
-    # Attempt relocation
-    if employee_to_relocate:
-        relocated = relocate_employee(president, employee_to_relocate, role)
-
-    if relocated:
-        print(f"{role.capitalize()} {name} relocated.")
-    else:
-        print(f"{role.capitalize()} {name} laid off and unable to be relocated.")
-
-    # Save the updated organization after relocation
-    save_organization(president)
+                employee_initiating_layoff = president.name
+                print(f"Fired Vice President {name}")
+                save_organization(president)
+        # Attempt to move VP to other VP position
+        if employee_initiating_layoff != "":
+            if len(president.vice_presidents) > 0:
+                pass
+            else:
+                president.hire(saved_employee)
+                transfered = True
+        if transfered:
+            print("Employee Relocated")
+            return
+        elif transfered != True:
+            print("Employee laid off and unable to be relocated")
+            return
+        print(f"Vice President {name} not found.")
 
 
 def relocate_employee(president, employee, role):
