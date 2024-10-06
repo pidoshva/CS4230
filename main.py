@@ -1,3 +1,4 @@
+
 """
 Project #4
 The Dysfunctional Organization System
@@ -451,9 +452,7 @@ def handle_transfer(president):
                     if transferred == True:
                         break
                     if supervisor.name != employee_initiating_layoff:
-                        if len(supervisor.workers) >= 5:
-                            break
-                        else:
+                        if len(supervisor.workers) < 5:
                             supervisor.workers.append(saved_employee)
                             transferred = True
             if transferred:
@@ -482,9 +481,7 @@ def handle_transfer(president):
                 if transferred == True:
                     break
                 if vp.name != employee_initiating_layoff:
-                    if len(vp.supervisors) >= 3:
-                        break
-                    else:
+                    if len(vp.supervisors) < 3:
                         vp.supervisors.append(saved_employee)
                         transferred = True
             if transferred:
