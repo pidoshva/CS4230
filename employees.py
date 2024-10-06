@@ -51,13 +51,14 @@ class Supervisor(Employee):
         if len(self.workers) < 5:
             self.workers.append(worker)
             print(f"Hired worker {worker.name} under Supervisor {self.name}")
+            return True
         else:
             print(f"No space to hire under Supervisor {self.name}")
+            return False
 
     def fire(self, worker):
         if worker in self.workers:
             self.workers.remove(worker)
-            print(f"Fired worker {worker.name} from Supervisor {self.name}")
         else:
             print(f"{worker.name} is not under Supervisor {self.name}")
 
@@ -93,8 +94,10 @@ class VicePresident(Employee):
         if len(self.supervisors) < 3:
             self.supervisors.append(supervisor)
             print(f"Hired Supervisor {supervisor.name} under Vice President {self.name}")
+            return True
         else:
             print(f"No space to hire under Vice President {self.name}")
+            return False
 
     def fire(self, supervisor):
         if supervisor in self.supervisors:
@@ -113,7 +116,6 @@ class VicePresident(Employee):
             else:
                 # If no workers, simply remove the supervisor
                 self.supervisors.remove(supervisor)
-                print(f"Fired Supervisor {supervisor.name}.")
         else:
             print(f"{supervisor.name} is not under Vice President {self.name}.")
 
@@ -153,8 +155,10 @@ class President(Employee):
         if len(self.vice_presidents) < 2:
             self.vice_presidents.append(vice_president)
             print(f"Hired Vice President {vice_president.name} under President {self.name}")
+            return True
         else:
             print(f"No space to hire under President {self.name}")
+            return False
 
     def fire(self, vice_president):
         if vice_president in self.vice_presidents:
