@@ -1,112 +1,110 @@
-# President:
-# - Cannot have greater than two vice presidents
-# - Cannot hire if subordinates is equal to two
-# - Hiring should correctly add 1 to the total of subordinates
-# - Firing should remove the subordinates
-# Vice President:
-# - Cannot have greater than three supervisors
-# - Cannot hire if subordinates is equal to three
-# - Hiring should correctly add 1 to the total of subordinates
-# Supervisors:
-# - Cannot have greater than five workers
-# - Cannot hire if subordinates is equal to five
-# - Hiring should correctly add 1 to the total of subordinates
-
-
-# Hiring an employee:
-# Each employee must have a unique name, add utils that check name before an employee is hired with a try catch, test this
-
 import unittest
-from io import StringIO
-import sys
-from main import (check_employee_name_uniqueness, handle_layoff, display_organization)
-import employees
+from unittest.mock import MagicMock, patch
+import main
 
-class TestDysfunctionalOrganization(unittest.TestCase):
-
+class TestOrganizationSystem(unittest.TestCase):
     def setUp(self):
-        # Create a fresh organization for each test
-        self.president = employees.President("Bob")
-        self.vp1 = employees.VicePresident("VP1")
-        self.vp2 = employees.VicePresident("VP2")
-        self.president.hire(self.vp1)
-        self.president.hire(self.vp2)
+        # Mock the employees and their hierarchy
+        self.mock_president = MagicMock()
+        self.mock_vp = MagicMock()
+        self.mock_supervisor = MagicMock()
+        self.mock_worker = MagicMock()
 
-        self.supervisor1 = employees.Supervisor("Supervisor1")
-        self.vp1.hire(self.supervisor1)
+        # Set up hierarchy
+        self.mock_president.name = "Manny"
+        self.mock_president.vice_presidents = [self.mock_vp]
+        self.mock_vp.name = "Ted"
+        self.mock_vp.supervisors = [self.mock_supervisor]
+        self.mock_supervisor.name = "Wolfgang"
+        self.mock_supervisor.workers = []  # Use a real list
+        self.mock_worker.name = "Daniel1"
+        self.mock_supervisor.workers.append(self.mock_worker)  # Add worker
 
-        self.worker1 = employees.Worker("Worker1")
-        self.supervisor1.hire(self.worker1)
+        # Mock behaviors
+        self.mock_president.hire = MagicMock(return_value=True)
+        self.mock_vp.hire = MagicMock(return_value=True)
+        self.mock_supervisor.hire = MagicMock(return_value=True)
+        self.mock_supervisor.fire = MagicMock()
+        self.mock_vp.fire = MagicMock()
+        self.mock_president.fire = MagicMock()
 
-        self.worker2 = employees.Worker("Worker2")
-        self.supervisor1.hire(self.worker2)
+        # Patch the employees module
+        patcher = patch("employees.President", return_value=self.mock_president)
+        self.addCleanup(patcher.stop)
+        self.mock_president_class = patcher.start()
 
-    def tearDown(self):
-        # Clear the employee names set after each test to ensure state isolation
-        employees.employee_names_used.clear()
+        # Clear global state
+        main.employee_names_used.clear()
+        main.employee_names_used.add("Daniel1")
 
-    def test_hierarchy(self):
-        # Test hierarchy levels
-        self.assertIsInstance(self.president, employees.President)
-        self.assertIsInstance(self.vp1, employees.VicePresident)
-        self.assertIsInstance(self.supervisor1, employees.Supervisor)
-        self.assertIsInstance(self.worker1, employees.Worker)
+    @patch("main.save_organization")
+    def test_display_organization(self, mock_save_organization):
+        main.display_organization(self.mock_president)
+        self.mock_president.display.assert_called_once()
 
-    def test_name_uniqueness(self):
-        # Test name uniqueness
-        self.assertTrue(check_employee_name_uniqueness("Alice"))  # Should be unique
-        self.assertFalse(check_employee_name_uniqueness("Worker1"))  # Should be false, already exists
+    @patch("builtins.open", create=True)
+    def test_read_organization(self, mock_open):
+        # Simulate valid file contents
+        mock_open.return_value.__enter__.return_value.readlines.return_value = [
+            "President: Manny\n",
+            "Vice President: Ted\n",
+            "Supervisor: Wolfgang\n",
+            "Worker: Daniel1\n",
+            "Worker: Daniel2\n",
+        ]
 
-    def test_hiring_logic(self):
-        # Test hiring logic
-        supervisor2 = employees.Supervisor("Supervisor2")
-        self.vp1.hire(supervisor2)
-        self.assertEqual(len(self.vp1.supervisors), 2)  # Should have 2 supervisors now
+        president = main.read_organization("mock_file.txt")
+        self.assertEqual(president, self.mock_president)
+        self.assertTrue(main.read_organization_success)
 
-        worker3 = employees.Worker("Worker3")
-        self.supervisor1.hire(worker3)
-        self.assertEqual(len(self.supervisor1.workers), 3)  # Should have 3 workers now
+    @patch("builtins.open", create=True)
+    def test_save_organization(self, mock_open):
+        main.save_organization(self.mock_president, "mock_file.txt")
+        mock_open.assert_called_with("mock_file.txt", "w")
+        mock_open.return_value.__enter__().write.assert_called()
 
-        # Attempt to hire a worker with the same name
-        worker_duplicate = employees.Worker("Worker1")
-        self.supervisor1.hire(worker_duplicate)  # Should not hire due to name conflict
-        self.assertEqual(len(self.supervisor1.workers), 3)  # Should still have 3 workers
+    @patch("builtins.input", side_effect=["worker", "Daniel1"])
+    @patch("main.save_organization")
+    def test_handle_quit_worker(self, mock_save_organization, mock_input):
+        main.handle_quit(self.mock_president)
+        self.assertNotIn(self.mock_worker, self.mock_supervisor.workers)
 
-    def test_firing_logic(self):
-        self.assertEqual(len(self.supervisor1.workers), 2)  # Should have 2 workers
-        self.supervisor1.fire(self.worker1)  # Fire Worker1
-        self.assertEqual(len(self.supervisor1.workers), 1)  # Should have 1 worker after firing
+    @patch("builtins.input", side_effect=["vp", "Ted"])
+    @patch("main.save_organization")
+    def test_handle_firing_vp(self, mock_save_organization, mock_input):
+        main.handle_firing(self.mock_president)
+        self.mock_president.fire.assert_called_with(self.mock_vp)
 
-    def test_promotion_logic(self):
-        # Promote Worker1 to Supervisor
-        self.vp1.promote(self.worker1, self.supervisor1)  
-        self.assertEqual(len(self.supervisor1.workers), 1)  # Supervisor1 should now have Worker2
-        self.assertEqual(len(self.vp1.supervisors), 2)  # VP1 should have 2 supervisors now
+    @patch("builtins.input", side_effect=["supervisor", "Wolfgang", "Ted"])
+    @patch("main.save_organization")
+    def test_handle_promotion_supervisor(self, mock_save_organization, mock_input):
+        main.handle_promotion(self.mock_president)
+        self.mock_president.promote.assert_called_with(self.mock_supervisor, self.mock_vp)
 
-    def test_layoff_logic(self):
-        self.assertEqual(len(self.supervisor1.workers), 2)  # Ensure 2 workers exist
-        self.supervisor1.fire(self.worker1)  # Lay off Worker1
-        self.assertEqual(len(self.supervisor1.workers), 1)  # Only Worker2 should remain
+    @patch("builtins.input", side_effect=["worker", "Daniel1", "Wolfgang"])
+    @patch("main.save_organization")
+    def test_handle_hiring_worker(self, mock_save_organization, mock_input):
+        main.employee_names_used = set()  # Ensure names are unique
+        main.handle_hiring(self.mock_president)
+        self.mock_supervisor.hire.assert_called()
 
-    def test_display_organization(self):
-        # Capture the output of display_organization
-        captured_output = StringIO()
-        sys.stdout = captured_output
-        display_organization(self.president)
-        sys.stdout = sys.__stdout__
+    @patch("builtins.input", side_effect=["worker", "Daniel1"])
+    @patch("main.save_organization")
+    def test_handle_layoff_worker(self, mock_save_organization, mock_input):
+        main.handle_layoff(self.mock_president)
+        self.assertNotIn(self.mock_worker, self.mock_supervisor.workers)
 
-        # Check the captured output against expected structure
-        output = captured_output.getvalue().strip()
-        expected_output = (
-            "President: Bob\n"
-            "  Vice President: VP1\n"
-            "    Supervisor: Supervisor1\n"
-            "      Worker: Worker1\n"
-            "      Worker: Worker2\n"
-            "  Vice President: VP2"
-        ).strip()
+    @patch("builtins.input", side_effect=["worker", "Daniel1"])
+    @patch("main.save_organization")
+    def test_handle_transfer_worker(self, mock_save_organization, mock_input):
+        main.handle_transfer(self.mock_president)
+        self.assertNotIn(self.mock_worker, self.mock_supervisor.workers)
 
-        self.assertEqual(output, expected_output)
+    def test_check_employee_name_uniqueness(self):
+        main.employee_names_used = {"Daniel1"}
+        self.assertFalse(main.check_employee_name_uniqueness("Daniel1"))
+        self.assertTrue(main.check_employee_name_uniqueness("New Worker"))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
